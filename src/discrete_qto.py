@@ -80,7 +80,13 @@ def relation_projection(embedding, r_embedding, nentity, fraction=10):
         fraction_embedding = fraction_embedding[:, nonzero]
         fraction_r_embedding = r_embedding[i].to_dense()[nonzero, :].unsqueeze(0)
 
-        fraction_r_embedding = torch.log(fraction_r_embedding + myglobal.FS_PARAMS.Epi) - torch.log(torch.ones_like(fraction_r_embedding) * myglobal.FS_PARAMS.Epi)
+        # fraction_r_embedding = torch.log(fraction_r_embedding + myglobal.FS_PARAMS.Epi) - torch.log(torch.ones_like(fraction_r_embedding) * myglobal.FS_PARAMS.Epi)
+        fraction_r_embedding = fraction_r_embedding.to_sparse()
+        ind = fraction_r_embedding._indices()
+        val = fraction_r_embedding._values()
+        val = torch.log(val + myglobal.FS_PARAMS.Epi) - torch.log(torch.ones_like(val) * myglobal.FS_PARAMS.Epi)
+        fraction_r_embedding = torch.sparse_coo_tensor(ind, val, fraction_r_embedding.shape,
+                                                       device=fraction_r_embedding.device).to_dense()
 
         fraction_embedding_premax = fraction_r_embedding * fraction_embedding.unsqueeze(-1)
 
